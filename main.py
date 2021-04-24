@@ -2,29 +2,45 @@ import sys
 import socket
 import time
 from datetime import datetime
-import multiprocessing.dummy as mp
+import threading
+from queue import Queue
+import settings
+
+# не уверена за многопоточность
+# что с 21 портом
+# udp порты тоже
 
 
-def scan(port):
+def consumer(q):
+    while True:
+        port = q.get()
+        try:
+            scan_tcp(port)
+        finally:
+            q.task_done()
+
+
+def scan_tcp(port):
     # will scan ports between 1 to 65 535
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    socket_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     socket.setdefaulttimeout(1)
 
     # returns an error indicator
-    result = s.connect_ex((target, port))
-    if result == 0:
+    result = socket_tcp.connect_ex((target, port))
+    if result == 0 and port != 21:
         print("Port {} is open".format(port))
 
-    if port % 10 == 0:
-        print(port)
-
-    s.close()
+    socket_tcp.close()
 
 
 if __name__ == '__main__':
     # Defining a target
     # translate hostname to IPv4
-    target = socket.gethostbyname(sys.argv[1])
+    try:
+        target = socket.gethostbyname(sys.argv[1])
+    except IndexError:
+        print("\n Set arguments")
+        sys.exit()
 
     # Add Banner
     print("Scanning Target: " + target)
@@ -33,21 +49,29 @@ if __name__ == '__main__':
 
     seconds = int(round(time.time()))
 
-    try:
-        p = mp.Pool(4)
-        p.map(scan, range(1, 50))  # range(0,1000) if you want to replicate your example
-        p.close()
-        p.join()
+    # producer/consumer pattern
+    queue = Queue()
+    # will scan ports between 1 to 65 535
+    for item in range(1, 5000):
+        queue.put(item)
 
+    try:
+        # turn on the consumer thread
+        consumers = [threading.Thread(
+            target=consumer, args=(queue,), daemon=True) for _ in range(settings.THREADS)]
+        for consumer_item in consumers:
+            consumer_item.start()
     except KeyboardInterrupt:
-        print("\n Exitting Program !!!!")
+        print("Exit")
         sys.exit()
     except socket.gaierror:
-        print("\n Hostname Could Not Be Resolved !!!!")
+        print("Hostname Could Not Be Resolved")
         sys.exit()
     except socket.error:
-        print("\n Server not responding !!!!")
+        print("Server not responding")
         sys.exit()
+
+    queue.join()
 
     print("-" * 50)
     print('All work completed', round(time.time()) - seconds, "sec")
