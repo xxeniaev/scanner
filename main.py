@@ -7,16 +7,13 @@ from queue import Queue
 import settings
 from scanner import Scanner
 
-# что с 21 портом
-# udp порты тоже
-
 
 def consumer(q):
     while True:
         s = q.get()
         try:
             s.scan_tcp()
-            # s.scan_udp()
+            s.scan_udp()
         finally:
             q.task_done()
 
@@ -32,7 +29,7 @@ if __name__ == '__main__':
 
     # Add Banner
     print("Scanning Target: " + target)
-    print("Scanning started at:" + str(datetime.now()))
+    print("Scanning started at: " + str(datetime.now()))
     print("-" * 50)
 
     seconds = int(round(time.time()))

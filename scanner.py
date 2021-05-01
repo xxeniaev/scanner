@@ -19,8 +19,15 @@ class Scanner:
         s.close()
 
     def scan_udp(self):
-        # не работает
-        """ send to /dev/null 2>&1 to suppress terminal output """
-        res = os.system("nc -vnzu " + str(self.target) + " " + str(self.port) + " > /dev/null 2>&1")
-        if res == 0:
+        # показывает все порты открытыми
+        # """ send to /dev/null 2>&1 to suppress terminal output """
+        # res = os.system("nc -vnzu " + str(self.target) + " " + str(self.port) + " > /dev/null 2>&1")
+        # if res == 0:
+        #     print("Port {} is open {}".format(self.port, 'UDP'))
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            sock.bind((self.target, self.port))
             print("Port {} is open {}".format(self.port, 'UDP'))
+        except OSError:
+            pass
