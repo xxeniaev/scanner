@@ -17,7 +17,7 @@
     -[x] многопоточность
 -[ ] *15 баллов*
     -[ ] определять протокол, который работает на
-открытом порте(http, smtp, pop3, dns, sntp)
+открытом порте (http, smtp, pop3, dns, sntp)
 
 ### Автор 
 *Xenia Evdokimova* ([xxeniaev](https://github.com/xxeniaev))
